@@ -32,10 +32,12 @@ def extract_features(image_path):
         def dist(a, b):
             return np.linalg.norm(point(a) - point(b))
 
-        # Feature calculations
-        jaw_width = dist(234, 454)
+        # Base measurement for normalization
         face_height = dist(10, 152)
-        cheekbone_width = dist(93, 323)
-        chin_angle = angle_between(point(234), point(152), point(454))
 
-        return [jaw_width, face_height, cheekbone_width, chin_angle]
+        # Normalized distances
+        jaw_width = dist(234, 454) / face_height
+        cheekbone_width = dist(93, 323) / face_height
+        chin_angle = angle_between(point(234), point(152), point(454))  # Keep angle as-is
+
+        return [jaw_width, 1.0, cheekbone_width, chin_angle]
