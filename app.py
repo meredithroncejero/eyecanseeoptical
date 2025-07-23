@@ -421,6 +421,9 @@ def analyze():
     with open("face_shape_model.pkl", "rb") as f:
         model = pickle.load(f)
 
+    with open("scaler.pkl", "rb") as f:
+        scaler = pickle.load(f)
+
     photo_dir = os.path.join('static', 'Photos')
     image_paths = sorted(
         [os.path.join(photo_dir, f) for f in os.listdir(photo_dir) if f.endswith('.jpg')],
@@ -452,11 +455,21 @@ def analyze():
 
         frame_predictions.append((os.path.basename(path), frame))
 
+    # ✅ Scale after collecting valid features
     if not feature_list:
         return "Failed to extract features", 400
 
+    print("[DEBUG] Raw features:", feature_list)
+
+    features_scaled = scaler.transform(feature_list)
+    print("[DEBUG] Scaled features:", features_scaled.tolist())
+
+    # ✅ Predict after scaling
     avg_features = np.mean(feature_list, axis=0)
-    predicted_shape = model.predict([avg_features])[0]
+    shapes = model.predict(features_scaled)
+
+    from collections import Counter
+    predicted_shape = Counter(shapes).most_common(1)[0][0]
 
     # Pick the best matching uploaded image based on frame recommendation
     recommended_frames = best_match_map.get(predicted_shape.lower(), [])
